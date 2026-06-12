@@ -13,6 +13,8 @@
 
 当前状态：**MVP 已完成，可日常试用。**
 
+本文和仓库中的代码均已脱敏：不包含 bot token、二维码、session、日志、微信账号数据或本机私密文件。
+
 ---
 
 ## 1. 参考项目
@@ -21,7 +23,7 @@
 
 - [Wechat-ggGitHub/wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code)
 
-这个项目已经证明了一件事：可以通过 OpenClaw / ClawBot 体系，把个人微信里的一个 Bot 会话桥接到电脑端的 Claude Code。
+这个项目已经证明：可以通过 OpenClaw / ClawBot 体系，把个人微信里的一个 Bot 会话桥接到电脑端的 Claude Code。
 
 从原项目中借鉴的核心不是“简单转发消息”，而是它的产品逻辑：
 
@@ -38,48 +40,42 @@
 
 ---
 
-## 2. 本机已有条件
+## 2. 已有条件与脱敏路径
 
-用户原先已经完成了微信到 Claude Code 的桥接，手机端只做过扫码绑定，没有手工创建复杂的微信入口。
+用户原先已经完成微信到 Claude Code 的桥接，手机端主要做过扫码绑定，没有手工创建复杂的微信入口。
 
-本机安装副本位置：
+本机安装副本位置在文档中统一写成占位符：
 
 ```text
-C:\Users\s58fa\.claude\skills\wechat-claude-code
-C:\Users\s58fa\.agents\skills\wechat-claude-code
+<USER_HOME>\.claude\skills\wechat-claude-code
+<USER_HOME>\.agents\skills\wechat-claude-code
 ```
 
 桥接运行数据目录：
 
 ```text
-C:\Users\s58fa\.wechat-claude-code
+<USER_HOME>\.wechat-claude-code
 ```
 
-已绑定的 WeChat bot 账号做脱敏记录：
+WeChat bot 账号、token、session 均不进入仓库。
+
+Claude Code 工作目录示例：
 
 ```text
-903329b5a6c1@im.bot
+<USER_HOME>\Documents\ClaudeCode
 ```
 
-Claude Code 工作目录：
+为 Codex 额外创建的长期工作目录示例：
 
 ```text
-C:\Users\s58fa\Documents\ClaudeCode
+<USER_HOME>\Documents\CodexWeChat
 ```
-
-为 Codex 额外创建的长期工作目录：
-
-```text
-C:\Users\s58fa\Documents\CodexWeChat
-```
-
-注意：本文不记录任何 bot token、登录凭证或完整私密数据。
 
 ---
 
 ## 3. 一开始要判断的问题
 
-### 3.1 能不能有两个微信入口？
+### 3.1 是否做两个微信入口？
 
 早期设想是：
 
@@ -88,7 +84,7 @@ C:\Users\s58fa\Documents\CodexWeChat
 微信 bot B -> Codex CLI
 ```
 
-但结合用户实际安装方式和 OpenClaw / ClawBot 的使用方式，短期更稳妥的是不要强行做两个微信入口。
+短期没有采用这个方案。
 
 原因：
 
@@ -109,34 +105,32 @@ C:\Users\s58fa\Documents\CodexWeChat
 
 ### 3.2 Codex CLI 会不会和 Codex 桌面端冲突？
 
-用户电脑当时没有 Codex CLI，需要先安装。
-
 实际验证结果：Codex CLI 和 Codex 桌面端可以并行。CLI 作为命令行工具安装在用户目录下，桌面端是另一个应用表面。
 
-本机最终验证到的 CLI 版本：
+本机验证到的 CLI 版本：
 
 ```text
 Codex CLI 0.139.0
 ```
 
-可靠可执行文件路径：
+可靠可执行文件路径用脱敏形式表示：
 
 ```text
-C:\Users\s58fa\.codex\packages\standalone\releases\0.139.0-x86_64-pc-windows-msvc\bin\codex.exe
+<USER_HOME>\.codex\packages\standalone\releases\<version>-x86_64-pc-windows-msvc\bin\codex.exe
 ```
 
-一个重要问题是：WindowsApps 里的 `codex.exe` 在本机环境中会返回 `Access is denied`，因此桥接层不能依赖 WindowsApps 路径。
+重要问题：WindowsApps 里的 `codex.exe` 在本机环境中会返回 `Access is denied`，因此桥接层不能依赖 WindowsApps 路径。
 
 ---
 
 ## 4. Codex CLI 兼容性 Spike
 
-为了让微信桥能可靠调用 Codex，先验证了 Codex CLI 的非交互行为。
+为了让微信桥能可靠调用 Codex，先验证 Codex CLI 的非交互行为。
 
 验证命令形态：
 
 ```powershell
-codex exec --json --skip-git-repo-check --cd C:\Users\s58fa\Documents\CodexWeChat "用中文回复：Codex CLI 测试成功"
+codex exec --json --skip-git-repo-check --cd <USER_HOME>\Documents\CodexWeChat "用中文回复：Codex CLI 测试成功"
 ```
 
 关键结论：
@@ -155,7 +149,7 @@ thread.started      -> 获取 thread_id
 turn.started        -> 一轮开始
 item.completed      -> 完成某个 item，agent_message 里有最终文本
 turn.completed      -> 一轮成功结束，可含 usage
-t援.failed / error  -> 失败状态
+turn.failed / error -> 失败状态
 ```
 
 桥接层应采用的安全 contract：
@@ -215,7 +209,7 @@ interface CodexQueryResult {
 
 没有把 Codex 塞进 Claude provider，而是新增独立的 Codex provider。
 
-这样做的原因：
+原因：
 
 - 两者 CLI 参数不同。
 - 两者输出协议不同。
@@ -223,8 +217,6 @@ interface CodexQueryResult {
 - 后续可以分别优化 Claude 流式和 Codex 事件翻译。
 
 ### 5.3 微信端反馈逻辑
-
-原项目 Claude 路径体验较好，因为用户能看到“对方正在输入”和分段输出。
 
 Codex CLI 当前不适合假装逐字流式，所以中期方案是轻量反馈：
 
@@ -242,33 +234,50 @@ Codex CLI 当前不适合假装逐字流式，所以中期方案是轻量反馈�
 
 ---
 
-## 6. 代码改动
+## 6. 代码文件
 
-主要修改位置：
+脱敏后的关键代码文件已经放在：
+
+- [code/wechat-claude-code-codex-extension](../code/wechat-claude-code-codex-extension/README.md)
+
+这些文件不是完整 skill 备份，而是可复用的关键改造文件和片段。
+
+包含：
 
 ```text
-C:\Users\s58fa\.claude\skills\wechat-claude-code
+code/wechat-claude-code-codex-extension/src/codex/provider.ts
+code/wechat-claude-code-codex-extension/src/main.codex-snippet.ts
+code/wechat-claude-code-codex-extension/src/commands/router.codex-snippet.ts
+code/wechat-claude-code-codex-extension/src/session.codex-snippet.ts
+code/wechat-claude-code-codex-extension/src/tests/codex-attention.test.ts
+code/wechat-claude-code-codex-extension/src/tests/codex-route.test.ts
 ```
 
-修改或新增的关键文件：
+刻意不上传：
 
 ```text
-src/codex/provider.ts
-src/commands/router.ts
-src/commands/handlers.ts
-src/session.ts
-src/main.ts
-src/tests/codex-route.test.ts
-src/tests/codex-provider.test.ts
-src/tests/codex-attention.test.ts
+node_modules/
+dist/
+accounts/
+sessions/
+logs/
+qrcode.png
+bot token
+context_token
+微信用户 ID
+本机绝对用户名路径
 ```
 
-### 6.1 `src/codex/provider.ts`
+---
+
+## 7. 实际代码改动说明
+
+### 7.1 `src/codex/provider.ts`
 
 新增 Codex provider，负责：
 
 - 定位 Codex CLI 可执行文件。
-- 在 Windows 上优先使用官方 standalone binary。
+- Windows 上优先查找官方 standalone release，或使用 `CODEX_BIN` 环境变量。
 - 调用 `codex exec --json --skip-git-repo-check`。
 - 解析 JSONL。
 - 保存 `thread_id`。
@@ -296,17 +305,13 @@ waiting for
 Codex 可能正在等待你在电脑端确认，请回电脑查看。
 ```
 
-### 6.2 `src/commands/router.ts`
+### 7.2 `src/commands/router.ts`
 
 新增 `/codex` 命令解析。
 
 空命令会返回用法提示；带内容则把剩余文本交给 Codex provider。
 
-### 6.3 `src/commands/handlers.ts`
-
-帮助文案新增 `/codex`。
-
-### 6.4 `src/session.ts`
+### 7.3 `src/session.ts`
 
 新增 Codex 会话字段和 provider-aware 历史记录。
 
@@ -319,7 +324,7 @@ provider label for chat messages
 
 这样 Claude 的 `sdkSessionId` 和 Codex 的 `thread_id` 不会混在一起。
 
-### 6.5 `src/main.ts`
+### 7.4 `src/main.ts`
 
 新增 `sendToCodex()` 并接入主消息处理流程。
 
@@ -338,13 +343,11 @@ provider label for chat messages
 
 ---
 
-## 7. 实际遇到的问题与解决
+## 8. 实际遇到的问题与解决
 
 ### 问题一：本机一开始没有 Codex CLI
 
-现象：用户电脑上还不能直接运行 Codex CLI。
-
-解决：通过官方 Windows install script 安装 Codex CLI，确认版本为 `0.139.0`。
+解决：通过官方 Windows install script 安装 Codex CLI，并确认 `codex exec --json` 可运行。
 
 ### 问题二：WindowsApps 里的 `codex.exe` 不可用
 
@@ -354,13 +357,7 @@ provider label for chat messages
 Access is denied
 ```
 
-解决：桥接层优先使用 standalone binary：
-
-```text
-C:\Users\s58fa\.codex\packages\standalone\releases\0.139.0-x86_64-pc-windows-msvc\bin\codex.exe
-```
-
-后续可改进为启动时 doctor 检查，而不是硬编码版本路径。
+解决：桥接层不要依赖 WindowsApps 路径。优先使用 `CODEX_BIN` 或用户目录下的 standalone release。
 
 ### 问题三：Codex 输出一开始有内部流程噪声
 
@@ -393,15 +390,11 @@ C:\Users\s58fa\.codex\packages\standalone\releases\0.139.0-x86_64-pc-windows-msv
 
 排查发现：有两个 `node.exe` 桥进程同时轮询同一个微信账号。
 
-旧进程启动时间：2026-06-11 21:47。
-
-新进程启动时间：2026-06-12 13:56。
-
 结果：同一条微信消息被两个桥处理。一个失败，一个成功。
 
 解决：只停止旧桥进程，不杀 Codex Desktop 的 Node runtime，也不杀新桥。
 
-经验：不要执行这种粗暴命令：
+不要执行：
 
 ```powershell
 Stop-Process -Name node
@@ -427,7 +420,7 @@ npm.cmd start
 
 ---
 
-## 8. 验证结果
+## 9. 验证结果
 
 编译：
 
@@ -466,16 +459,14 @@ cleanCodexText preserves normal user-facing text
 /codex 你在使用什么模型 -> Codex 收到，正在处理。 -> Codex 最终回复
 ```
 
-用户确认：重复报错问题清理旧进程后恢复正常。
-
 ---
 
-## 9. 当前使用方式
+## 10. 当前使用方式
 
 启动桥：
 
 ```powershell
-cd C:\Users\s58fa\.claude\skills\wechat-claude-code
+cd <USER_HOME>\.claude\skills\wechat-claude-code
 npm.cmd start
 ```
 
@@ -497,7 +488,7 @@ npm.cmd start
 
 ---
 
-## 10. 当前边界
+## 11. 当前边界
 
 ### 已完成
 
@@ -531,35 +522,31 @@ watcher
 -> 只提醒用户回电脑确认，不自动批准
 ```
 
-这个需要单独验证 Codex Desktop 和 Claude Code 分别把审批等待状态记录在哪里。
+---
+
+## 12. 设计原则总结
+
+1. 不破坏原 Claude Code 路径。
+2. 不强行做第二个微信入口，先用 `/codex` 在同一入口分流。
+3. 不把 Codex 当成 Claude 的输出协议。
+4. 微信端只发适合手机看的信息。
+5. 审批只提醒，不代替用户批准。
+6. Windows 上要小心进程和 PATH。
 
 ---
 
-## 11. 设计原则总结
-
-这次改造的核心原则：
-
-1. **不要破坏原 Claude Code 路径。**
-2. **不要强行做第二个微信入口。** 先用 `/codex` 在同一入口分流。
-3. **不要把 Codex 当成 Claude 的输出协议。** Codex 是 JSONL 事件流，不是 Claude `stream-json`。
-4. **微信端只发适合手机看的信息。** 不发原始 JSON、工具调用、内部 prompt、长日志。
-5. **审批只提醒，不代替用户批准。** 手机收到提醒，批准动作仍回电脑做。
-6. **Windows 上要小心进程和 PATH。** 特别是 WindowsApps `codex.exe`、PowerShell execution policy、重复 Node 进程。
-
----
-
-## 12. 后续建议
+## 13. 后续建议
 
 优先级从高到低：
 
 1. 增加 Windows status / stop 命令，避免重复桥进程。
 2. 启动时做 Codex doctor 检查，提前发现 CLI 不可用。
-3. 把 Codex binary 路径做成配置项，而不是固定版本路径。
+3. 把 Codex binary 路径做成配置项或环境变量。
 4. 做桌面端全局审批 watcher。
 5. 进一步翻译 Codex JSONL 中的 todo / command / file-change 状态，但保持微信端克制。
 
 ---
 
-## 13. 一句话结论
+## 14. 一句话结论
 
 这次工作已经把原本单一的微信到 Claude Code 桥，扩展成了同一微信入口下的双 provider 桥：Claude Code 负责默认对话，Codex CLI 通过 `/codex` 触发；并且 Codex 路径已有基本的手机端进度反馈和审批提醒雏形。
