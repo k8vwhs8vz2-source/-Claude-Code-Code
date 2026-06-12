@@ -24,7 +24,10 @@
 主要文档：
 
 - [完整实施与复盘记录](docs/wechat-codex-bridge-2026-06-12.md)
+- [脱敏关键代码文件](code/wechat-claude-code-codex-extension/README.md)
 
 参考项目：
 
 - [Wechat-ggGitHub/wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code)
+
+隐私说明：仓库只保留复盘和脱敏代码，不包含 bot token、二维码、session、日志、微信账号数据或本机私密文件。
