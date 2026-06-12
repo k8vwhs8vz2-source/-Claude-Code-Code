@@ -11,23 +11,24 @@
 
 当前状态：MVP 已跑通，可日常试用。
 
-已完成：
+## 文档
 
-- 复用原 `wechat-claude-code` 的微信协议层。
-- 新增 `/codex` 路由，不破坏默认 Claude Code 入口。
-- 在 Windows 上验证 Codex CLI 的非交互 JSONL 输出格式。
-- 新增 Codex provider，解析 `codex exec --json` 输出。
-- 保存 Codex `thread_id`，用于后续会话恢复。
-- 为 Codex 微信路径加入轻量反馈：收到、处理中、疑似等待电脑端确认。
-- 记录重复回复问题的根因和解决方式。
+- [Overview](docs/overview.md)：项目目标、参考来源、当前边界。
+- [Implementation Notes](docs/implementation-notes.md)：Codex CLI contract、路由设计、代码实现、验证方式。
+- [Troubleshooting](docs/troubleshooting.md)：实际遇到的问题和解决办法。
+- [Roadmap](docs/roadmap.md)：后续可做的增强项。
+- [Upstream Reference](references/upstream.md)：参考项目说明。
 
-主要文档：
+旧版完整复盘链接仍保留为迁移页：
 
-- [完整实施与复盘记录](docs/wechat-codex-bridge-2026-06-12.md)
+- [2026-06-12 原始复盘入口](docs/wechat-codex-bridge-2026-06-12.md)
+
+## 代码
+
 - [脱敏关键代码文件](code/wechat-claude-code-codex-extension/README.md)
 
-参考项目：
+仓库只保留复盘和脱敏代码，不包含 bot token、二维码、session、日志、微信账号数据或本机私密文件。
+
+## 参考项目
 
 - [Wechat-ggGitHub/wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code)
-
-隐私说明：仓库只保留复盘和脱敏代码，不包含 bot token、二维码、session、日志、微信账号数据或本机私密文件。
